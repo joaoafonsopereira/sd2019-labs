@@ -12,17 +12,24 @@ public class Client {
 	
 	public static void main(String[] args) throws IOException {
 		
-		URI[] instances = Discovery.findUrisOf(Server.NAME, 1);
+		URI[] instances = Discovery.findUrisOf(Server.NAME, 2);
 		
 		if( instances.length > 0 ) {
-			String uri = instances[0].toURL() + "earth.jpg";
+			//System.out.println("mais que 0 instancias");
+			for(int i = 0; i < instances.length; i++) {
+				String uri = instances[i].toURL() + "earth.jpg";
+				System.out.println("Uri: " + uri);
 
-			URLConnection conn = new URL(uri).openConnection();
-			conn.getHeaderFields().forEach( (h,v) -> {
-				System.out.printf("%s: %s\n", h, v);
-			});
+				URLConnection conn = new URL(uri).openConnection();
+				conn.getHeaderFields().forEach( (h,v) -> {
+					System.out.printf("%s: %s\n", h, v);
+				});
+				System.out.println();
+			}
 			
 		}
+		else
+			System.out.println("Opa");
 	}
 	
 }

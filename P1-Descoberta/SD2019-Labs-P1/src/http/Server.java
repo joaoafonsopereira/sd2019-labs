@@ -27,13 +27,16 @@ public class Server {
 	public static void main(String[] args) throws IOException {
 
 		String ServerURI = String.format("http://%s:%d/", InetAddress.getLocalHost().getHostAddress(), PORT);
-		
-		Discovery.announce(NAME, ServerURI);			
+		//String ServerURI2 = String.format("http://%s:%d/", InetAddress.getLocalHost().getHostAddress(), PORT+1);
+
+		Discovery.announce(NAME, ServerURI);
+		//Discovery.announce(NAME, ServerURI2);
 		
 		HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 1);		
 		server.createContext("/", new FileHttpHandler());
 		server.setExecutor(null);
 		server.start();
+	
 	}
 
 

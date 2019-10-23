@@ -25,6 +25,7 @@ public class RestMediaStorageServer {
 
 		String ip = IP.hostAddress();
 		String serverURI = String.format(SERVER_BASE_URI, ip, PORT);
+		// serverURI = "http://localhost:9999
 		
 		ResourceConfig config = new ResourceConfig();
 
@@ -34,4 +35,6 @@ public class RestMediaStorageServer {
 
 		Log.info(String.format("%s Server ready @ %s\n",  SERVICE, serverURI));
 	}
+	
+	
 }

@@ -1,9 +1,14 @@
 package discovery;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
+import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -32,10 +37,13 @@ public class Discovery {
 	static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("226.226.226.226", 2266);
 	static final int DISCOVERY_PERIOD = 1000;
 	static final int DISCOVERY_TIMEOUT = 5000;
+	
+	static final int MAX_DATAGRAM_SIZE = 65536;
 
 	// Used separate the two fields that make up a service announcement.
 	private static final String DELIMITER = "\t";
-
+	
+	
 	/**
 	 * Starts sending service announcements at regular intervals... 
 	 * @param  serviceName the name of the service to announce
@@ -43,7 +51,7 @@ public class Discovery {
 	 * 
 	 */
 	public static void announce(String serviceName, String serviceURI) {
-		Log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s", DISCOVERY_ADDR, serviceName, serviceURI));
+		Log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s\n", DISCOVERY_ADDR, serviceName, serviceURI));
 		
 		byte[] pktBytes = String.format("%s%s%s", serviceName, DELIMITER, serviceURI).getBytes();
 
@@ -58,17 +66,46 @@ public class Discovery {
 				e.printStackTrace();
 			}
 		}).start();
-	}
-
+	}	
+	
 	/**
 	 * Performs discovery of instances of the service with the given name.
 	 * 
 	 * @param  serviceName the name of the service being discovered
 	 * @param  minRepliesNeeded the required number of service replicas to find. 
 	 * @return an array of URI with the service instances discovered. Returns an empty, 0-length, array if the service is not found within the alloted time.
+	 * @throws IOException 
 	 * 
 	 */
-	public static URI[] findUrisOf(String serviceName, int minRepliesNeeded) {
-		throw new Error("Not Implemented...");
+	public static URI[] findUrisOf(String serviceName, int minRepliesNeeded) throws IOException {		
+		Set<URI> uriSet = new HashSet<>(minRepliesNeeded);
+		try( MulticastSocket socket = new MulticastSocket(DISCOVERY_ADDR.getPort()) ){
+			
+			socket.joinGroup(DISCOVERY_ADDR.getAddress());
+			socket.setSoTimeout(DISCOVERY_TIMEOUT);
+
+			long start = System.currentTimeMillis();
+						
+			while( uriSet.size() < minRepliesNeeded && !hasTimedOut(start)) {
+				byte[] buffer = new byte[MAX_DATAGRAM_SIZE];
+				DatagramPacket request = new DatagramPacket( buffer, buffer.length ) ;
+
+				try { socket.receive( request ); } 
+				catch (SocketTimeoutException e) { break; } // minRepliesNeeded > uriSet.size	
+				
+				String req = new String(request.getData()).trim();
+		        String[] reqParams = req.split(DELIMITER);
+		        
+		        if(reqParams[0].equals(serviceName))         	
+		        	uriSet.add(URI.create(reqParams[1]));
+			}
+		} 
+		URI[] base = new URI[0];
+		return uriSet.size() == minRepliesNeeded ? uriSet.toArray(base) : base;
 	}	
+	
+	private static boolean hasTimedOut(long start) {
+		return System.currentTimeMillis() - start >= DISCOVERY_TIMEOUT;
+	}
+
 }

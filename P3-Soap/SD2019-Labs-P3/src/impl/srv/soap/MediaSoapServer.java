@@ -1,6 +1,7 @@
 package impl.srv.soap;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import javax.xml.ws.Endpoint;
@@ -20,7 +21,7 @@ public class MediaSoapServer {
 	
 	public static final int PORT = 7777;
 	public static final String SERVICE = "Microgram-MediaStorage";
-	public static String SOAP_BASE_PATH = "/soap";
+	public static String SOAP_BASE_PATH = "/soap"; // /soap ou /soap/media ?
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -29,6 +30,7 @@ public class MediaSoapServer {
 
 		// Create the SOAP Endpoint
 		Endpoint soapEndpoint = Endpoint.create(new MediaWebService());
+<<<<<<< HEAD
 		
         // Publish the SOAP webservice, under the "http://<ip>:<port>/soap" 
         soapEndpoint.publish( server.createContext(SOAP_BASE_PATH));
@@ -37,6 +39,18 @@ public class MediaSoapServer {
         // Start Serving Requests: both SOAP Requests
         server.start();
         
+=======
+
+		// Publish the SOAP webservice, under the "http://<ip>:<port>/soap"
+		soapEndpoint.publish(server.createContext(SOAP_BASE_PATH));
+
+		// Provide an executor to create threads as needed...
+		server.setExecutor(Executors.newCachedThreadPool());
+
+		// Start Serving Requests: both SOAP Requests
+		server.start();
+
+>>>>>>> master
 		String ip = IP.hostAddress();
 		Log.info(String.format("%s Soap Server ready @ %s\n", SERVICE, ip + ":" + PORT));
 	}

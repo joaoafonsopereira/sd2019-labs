@@ -29,13 +29,17 @@ public class UploadMediaClient {
 		Service service = Service.create( new URL(serverUrl + WSDL), QNAME);
 		SoapMedia media = service.getPort( microgram.api.soap.SoapMedia.class );
 		
+		
 		try {
 			byte[] bytes = Files.readAllBytes( EARTH.toPath() );
 			String uri = media.upload( bytes );
 			Log.info("Upload completed: " + uri );
+			
+			byte[] bytess = media.download(uri);
+			Log.info("Download completed: " + uri);
 		} catch( MicrogramException x ) {
 			Log.info("Upload failed, reason: "  + x.getMessage());
-		}
+		} 
 	} 
 
 }
